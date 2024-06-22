@@ -2,6 +2,12 @@
 const express = require("express");
 const { tanyabal } = require("./balisai");
 const connection = require("./db");
+const cors = require("cors");
+const { getOrderData } = require("./smallcard");
+const { getOrderStats } = require("./largecard");
+
+
+
 
 // Initialize Express application
 const app = express();
@@ -9,10 +15,33 @@ const app = express();
 // Middleware
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(cors())
 
 // Routes
 app.get("/", (req, res) => {
   res.send("Hello World!");
+});
+
+app.get("/orders", (req, res) => {
+  getOrderData((err, results) => {
+    if (err) {
+      console.error("Error fetching orders:", err);
+      res.status(500).send("Error fetching orders");
+      return;
+    }
+    res.json(results);
+  });
+});
+
+app.get("/order-stats", (req, res) => {
+  getOrderStats((err, results) => {
+    if (err) {
+      console.error("Error fetching order stats:", err);
+      res.status(500).send("Error fetching order stats");
+      return;
+    }
+    res.json(results);
+  });
 });
 
 app.get("/askAI", async (req, res) => {
@@ -60,21 +89,37 @@ app.get("/askAI", async (req, res) => {
       // Join the formatted results into a single string
       datasebelumya = formattedResults.join(", ");
       console.log("Query results:", results);
-      const tanya = `Berikut adalah data penjualan saya: ${datasebelumya}. 
-1. Berapa total penjualan untuk setiap bulan?
-2. Bandingkan kinerja penjualan antar bulan.
-3. Bulan apa yang memiliki penjualan tertinggi dan terendah? Format: month: highest, month: lowest.
-4. Berikan rekomendasi produk yang harus dijual pada bulan berikutnya. Format: Here's my recommendation for how many products to sell: [jumlah].
-5. Berikan rekomendasi strategi marketing yang cocok untuk penjualan jersey dan merchandise.`;
+      const tanya = `Here are my sales data: ${datasebelumya}.
+1. What is the total sales for each month?
+2. Compare the sales performance between months.
+3. Which month has the highest and lowest sales? Format: month: highest, month: lowest.
+4. Provide recommendations for products to sell in the next month. Format: Here's my recommendation for how many products to sell: [number].
+5. Recommend marketing strategies suitable for selling jerseys and merchandise..`;
 
       console.log(tanya);
 
       const tanyakeai = await tanyabal(tanya);
 
-      res.send(tanyakeai);
+      res.status(200).send({msg:tanyakeai});
     });
   } catch (error) {}
 });
+
+
+// app.get("/getDataSales",async (req,res)=>{
+//   try {
+
+//     const query = ``
+
+
+//     await connection.query(query)
+
+    
+//   } catch (error) {
+    
+//   }
+
+// })
 
 // Start the server
 const port = process.env.PORT || 3002;
