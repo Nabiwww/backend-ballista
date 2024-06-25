@@ -5,6 +5,9 @@ const connection = require("./db");
 const cors = require("cors");
 const { getOrderData } = require("./smallcard");
 const { getOrderStats } = require("./largecard");
+const { getPieChartData } = require("./piechart");
+const { getOrdersData, getSalesData } = require("./linechart");
+const { getDetailedOrders } = require("./table");
 
 
 
@@ -33,6 +36,49 @@ app.get("/orders", (req, res) => {
   });
 });
 
+// Endpoint to fetch detailed orders
+app.get("/orders-data", async (req, res) => {
+  try {
+    const results = await getDetailedOrders();
+    res.json(results);
+  } catch (error) {
+    console.error("Error fetching orders data:", error);
+    res.status(500).json({ error: "Failed to fetch orders data" });
+  }
+});
+app.get("/pie-chart-data", (req, res) => {
+  getPieChartData((err, results) => {
+    if (err) {
+      console.error("Error fetching pie chart data:", err);
+      res.status(500).send("Error fetching pie chart data");
+      return;
+    }
+    res.json(results);
+  });
+});
+
+app.get("/sales-data", (req, res) => {
+  getSalesData((err, results) => {
+    if (err) {
+      console.error("Error fetching sales data:", err);
+      res.status(500).send("Error fetching sales data");
+      return;
+    }
+    res.json(results);
+  });
+});
+
+app.get("/orders-data-line", (req, res) => {
+  getOrdersData((err, results) => {
+    if (err) {
+      console.error("Error fetching orders data:", err);
+      res.status(500).send("Error fetching orders data");
+      return;
+    }
+    res.json(results);
+  });
+});
+
 app.get("/order-stats", (req, res) => {
   getOrderStats((err, results) => {
     if (err) {
@@ -47,12 +93,12 @@ app.get("/order-stats", (req, res) => {
 app.get("/askAI", async (req, res) => {
   try {
     const query = `SELECT 
-            DATE_FORMAT(order_date, '%Y-%m') AS month,
-            SUM(total_amount) AS total_sales
+            DATE_FORMAT(order_time, '%Y-%m') AS month,
+            SUM(quantity) AS total_sales
         FROM 
-            sales
+            orders
         GROUP BY 
-            DATE_FORMAT(order_date, '%Y-%m');
+            DATE_FORMAT(order_time, '%Y-%m');
         `;
 
     // Month mapping

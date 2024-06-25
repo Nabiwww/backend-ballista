@@ -4,10 +4,10 @@ const db = require("./db");
 const getOrderData = (callback) => {
   const queryOrders = `
     SELECT 
-      COUNT(*) AS total,
-      SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
-      SUM(CASE WHEN status = 'process' THEN 1 ELSE 0 END) AS processing,
-      SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS delivered
+      SUM(quantity) AS total,
+      SUM(CASE WHEN status = 'failed' THEN quantity ELSE 0 END) AS failed,
+      SUM(CASE WHEN status = 'process' THEN quantity ELSE 0 END) AS processing,
+      SUM(CASE WHEN status = 'completed' THEN quantity ELSE 0 END) AS delivered
     FROM orders;
   `;
 

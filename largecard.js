@@ -14,9 +14,13 @@ const getOrderStats = (callback) => {
   // Query untuk mendapatkan data penjualan dari tabel sales
   const querySales = `
     SELECT 
-      SUM(CASE WHEN DATE(order_date) = CURDATE() THEN total_amount ELSE 0 END) AS today_sales,
-      SUM(CASE WHEN DATE(order_date) = CURDATE() - INTERVAL 1 DAY THEN total_amount ELSE 0 END) AS yesterday_sales
-    FROM sales;
+    SUM(CASE WHEN DATE(order_time) = CURDATE() THEN o.quantity * p.price ELSE 0 END) AS today_sales,
+    SUM(CASE WHEN DATE(order_time) = CURDATE() - INTERVAL 1 DAY THEN o.quantity * p.price ELSE 0 END) AS yesterday_sales
+FROM 
+    orders o
+JOIN 
+    products p ON o.product_id = p.product_id;
+
   `;
 
   // Jalankan kedua query secara paralel
