@@ -8,7 +8,7 @@ const { getOrderStats } = require("./largecard");
 const { getPieChartData } = require("./piechart");
 const { getOrdersData, getSalesData } = require("./linechart");
 const { getDetailedOrders } = require("./table");
-
+const categoriesRouter = require('./api/categories'); // Import router untuk categories
 
 
 
@@ -18,12 +18,16 @@ const app = express();
 // Middleware
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
-app.use(cors())
+app.use(cors());
 
 // Routes
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
+
+
+// Gunakan router untuk path /api/categories
+app.use('/api/categories', categoriesRouter);
 
 app.get("/orders", (req, res) => {
   getOrderData((err, results) => {
@@ -35,6 +39,8 @@ app.get("/orders", (req, res) => {
     res.json(results);
   });
 });
+
+
 
 // Endpoint to fetch detailed orders
 app.get("/orders-data", async (req, res) => {
@@ -146,26 +152,15 @@ app.get("/askAI", async (req, res) => {
 
       const tanyakeai = await tanyabal(tanya);
 
-      res.status(200).send({msg:tanyakeai});
+      res.status(200).send({ msg: tanyakeai });
     });
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error in askAI endpoint:", error);
+    res.status(500).send("Error processing AI request");
+  }
 });
 
 
-// app.get("/getDataSales",async (req,res)=>{
-//   try {
-
-//     const query = ``
-
-
-//     await connection.query(query)
-
-    
-//   } catch (error) {
-    
-//   }
-
-// })
 
 // Start the server
 const port = process.env.PORT || 3002;
