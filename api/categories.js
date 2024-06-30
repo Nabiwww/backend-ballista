@@ -4,9 +4,9 @@ const connection = require("../db");
 
 // Endpoint untuk membuat category baru
 router.post("/", (req, res) => {
-  const { title, description, slug, imageUrl } = req.body;
+  const { title, description, imageUrl } = req.body;
   const sql =
-    "INSERT INTO category (title, description, imageUrl) VALUES (?, ?, ?, ?)";
+    "INSERT INTO category (title, description, image) VALUES (?, ?, ?)";
   connection.query(
     sql,
     [title, description, imageUrl],
