@@ -144,14 +144,17 @@ app.get("/order-stats", (req, res) => {
 
 app.get("/kpi-ai", async (req, res) => {
   try {
-    const query = `SELECT 
-            DATE_FORMAT(order_time, '%Y-%m') AS month,
-            SUM(quantity) AS total_sales
-        FROM 
-            orders
-        GROUP BY 
-            DATE_FORMAT(order_time, '%Y-%m');
-        `;
+    const query = `
+      SELECT 
+          DATE_FORMAT(order_time, '%Y-%m') AS month,
+          SUM(quantity) AS total_sales
+      FROM 
+          orders
+      GROUP BY 
+          DATE_FORMAT(order_time, '%Y-%m')
+      ORDER BY
+          DATE_FORMAT(order_time, '%Y-%m');
+    `;
 
     const monthNames = {
       "01": "Januari",
@@ -182,15 +185,33 @@ app.get("/kpi-ai", async (req, res) => {
 
       const salesDataText = formattedResults.join(", ");
 
-      const promptText = `Ini adalah data penjualan saya: ${salesDataText}.
+      const lastMonth = results[results.length - 1].month;
+      const [lastYear, lastMonthNumber] = lastMonth.split("-");
+      const nextMonthNumber = (parseInt(lastMonthNumber) % 12) + 1;
+      const nextYear =
+        nextMonthNumber === 1 ? parseInt(lastYear) + 1 : lastYear;
+      const nextMonth = `${nextYear}-${String(nextMonthNumber).padStart(
+        2,
+        "0"
+      )}`;
+      const nextMonthName =
+        monthNames[String(nextMonthNumber).padStart(2, "0")];
 
-6. Berikan rekomendasi jumlah KPI untuk setiap bulan . Format: KPI Bulan [nama bulan]: [jumlah].`;
+      const promptText = `Ini adalah data penjualan saya: ${salesDataText}.
+6. Berikan rekomendasi jumlah KPI untuk setiap bulan. Tambahkan juga prediksi untuk bulan ${nextMonthName} ${nextYear}. Format: KPI Bulan [nama bulan]: [jumlah].`;
 
       console.log("Prompt text:", promptText);
 
       const aiResponse = await tanyabal(promptText);
+      const matchedKpiData = aiResponse.match(/KPI Bulan \w+: \d+/g);
 
-      const kpiData = aiResponse.match(/KPI Bulan \w+: \d+/g).map((kpi) => {
+      if (!matchedKpiData) {
+        return res
+          .status(500)
+          .json({ error: "Failed to extract KPI data from AI response" });
+      }
+
+      const kpiData = matchedKpiData.map((kpi) => {
         const [month, value] = kpi.split(": ");
         return {
           month: month.replace("KPI Bulan ", ""),
