@@ -270,7 +270,6 @@ app.get("/askAI", async (req, res) => {
       const promptText = `Ini adalah data penjualan saya: ${salesDataText}.
 Berapa total penjualan untuk setiap bulan?
 Bandingkan kinerja penjualan antara bulan.
-Bulan mana yang memiliki penjualan tertinggi dan terendah? Format: bulan: tertinggi, bulan: terendah.
 Berikan rekomendasi produk untuk dijual bulan depan. Format: Inilah rekomendasi saya untuk jumlah produk yang harus dijual: [jumlah].
 Rekomendasikan strategi pemasaran yang sesuai untuk menjual jersey dan merchandise.`;
 

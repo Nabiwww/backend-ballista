@@ -11,6 +11,7 @@ async function getDetailedOrders() {
         u.username,
         u.alamat,
         u.gender,
+        u.email,
         p.product_name,
         o.quantity,
         o.order_time,
