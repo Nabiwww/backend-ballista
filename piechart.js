@@ -6,7 +6,8 @@ const getPieChartData = (callback) => {
   FROM orders o
   JOIN products p ON o.product_id = p.product_id
   GROUP BY p.product_name;
-  `;
+  `
+  ;
 
   connection.query(query, (error, results) => {
     if (error) {

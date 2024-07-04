@@ -1,5 +1,3 @@
-// api/products.js
-
 const express = require("express");
 const router = express.Router();
 const connection = require("../db");
@@ -11,14 +9,22 @@ const queryAsync = promisify(connection.query).bind(connection);
 // Create a new product
 router.post("/", async (req, res) => {
   try {
-    const { title, idProduct, productPrice, imageUrl, description } = req.body;
+    const { title, productPrice, imageUrl, stock, description, category_id } =
+      req.body;
 
     const query = `
-      INSERT INTO products (product_id, product_name, description, price, image)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO products (product_name, description, price, stock, image, cat_id)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    const values = [idProduct, title, description, productPrice, imageUrl];
+    const values = [
+      title,
+      description,
+      productPrice,
+      stock,
+      imageUrl,
+      category_id,
+    ];
 
     const results = await queryAsync(query, values);
 

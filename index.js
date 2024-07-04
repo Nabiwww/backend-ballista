@@ -51,12 +51,28 @@ app.post("/upload-image", (req, res) => {
   });
 });
 
+// backend/index.js
+
 app.post("/api/products", (req, res) => {
-  const { product_name, product_id, description, price, image_url } = req.body;
+  const {
+    product_name,
+    description,
+    stock,
+    price,
+    image_url,
+    category_id // Pastikan ini sesuai dengan nama field di tabel products
+  } = req.body;
 
   const query =
-    "INSERT INTO products (product_id, product_name, description, price, image) VALUES (?, ?, ?, ?, ?)";
-  const values = [product_id, product_name, description, price, image_url];
+    "INSERT INTO products (product_name, description, price, stock, image, cat_id) VALUES (?, ?, ?, ?, ?, ?)";
+  const values = [
+    product_name,
+    description,
+    price,
+    stock,
+    image_url,
+    category_id, // Pastikan ini diambil dari req.body
+  ];
 
   connection.query(query, values, (error, results) => {
     if (error) {
@@ -70,6 +86,7 @@ app.post("/api/products", (req, res) => {
     });
   });
 });
+
 
 app.get("/api/products", (req, res) => {
   const query = "SELECT * FROM products";
@@ -107,6 +124,19 @@ app.get("/pie-chart-data", (req, res) => {
     if (err) {
       console.error("Error fetching pie chart data:", err);
       return res.status(500).json({ error: "Failed to fetch pie chart data" });
+    }
+    res.json(results);
+  });
+});
+
+// Endpoint to get products with low stock
+app.get("/api/low-stock-products", (req, res) => {
+  const query = "SELECT * FROM products WHERE stock <= 100";
+  
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error("Error fetching low stock products:", error);
+      return res.status(500).json({ error: "Failed to fetch low stock products" });
     }
     res.json(results);
   });
@@ -284,6 +314,9 @@ Rekomendasikan strategi pemasaran yang sesuai untuk menjual jersey dan merchandi
     res.status(500).json({ error: "Error processing AI request" });
   }
 });
+
+
+
 
 const port = process.env.PORT || 3002;
 app.listen(port, () => {
