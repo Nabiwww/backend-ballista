@@ -350,6 +350,37 @@ app.get("/api/get-design", (req, res) => {
   });
 });
 
+app.get("/product-liked", async (req, res) => {
+  try {
+    const query = "SELECT product_name, product_liked FROM products";
+    connection.query(query, (error, results) => {
+      if (error) {
+        console.error("Error fetching product liked data:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
+      res.json(results);
+    });
+  } catch (error) {
+    console.error("Error fetching product liked data:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/product-seen", async (req, res) => {
+  try {
+    const query = "SELECT product_name, product_seen FROM products";
+    connection.query(query, (error, results) => {
+      if (error) {
+        console.error("Error fetching product seen data:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
+      res.json(results);
+    });
+  } catch (error) {
+    console.error("Error fetching product seen data:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 
 
