@@ -11,6 +11,7 @@ const categoriesRouter = require("./api/categories");
 const couponsRouter = require("./api/coupon");
 const multer = require("multer");
 const path = require("path");
+const productsRouter = require("./api/products");
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+app.use("/api/products", productsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/coupons", couponsRouter);
 
@@ -249,6 +251,16 @@ app.get("/kpi-ai", async (req, res) => {
         };
       });
 
+      // Tambahkan prediksi untuk bulan berikutnya
+      if (
+        !kpiData.find((item) => item.month === `${nextMonthName} ${nextYear}`)
+      ) {
+        kpiData.push({
+          month: `${nextMonthName} ${nextYear}`,
+          value: 0, // atau nilai default lainnya jika tidak ada prediksi
+        });
+      }
+
       res.status(200).json(kpiData);
     });
   } catch (error) {
@@ -256,6 +268,7 @@ app.get("/kpi-ai", async (req, res) => {
     res.status(500).json({ error: "Error processing AI request" });
   }
 });
+
 
 app.get("/askAI", async (req, res) => {
   try {
@@ -313,6 +326,28 @@ Rekomendasikan strategi pemasaran yang sesuai untuk menjual jersey dan merchandi
     console.error("Error in askAI endpoint:", error);
     res.status(500).json({ error: "Error processing AI request" });
   }
+});
+// Endpoint to get image based on type and style
+app.get("/api/get-design", (req, res) => {
+  const { productType, style } = req.query;
+  const query =
+    "SELECT image FROM design_generator WHERE type = ? AND style = ?";
+
+  connection.query(query, [productType, style], (error, results) => {
+    if (error) {
+      console.error("Error fetching design:", error);
+      return res.status(500).json({ error: "Failed to fetch design" });
+    }
+    if (results.length === 0 || !results[0].image) {
+      return res.status(404).json({ error: "Design not found" });
+    }
+
+    // Assuming results[0].image is the BLOB data
+    const base64Image = results[0].image.toString("base64");
+    const imageUrl = `data:image/jpeg;base64,${base64Image}`;
+
+    res.status(200).json({ imageUrl });
+  });
 });
 
 

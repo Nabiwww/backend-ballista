@@ -9,7 +9,7 @@ const queryAsync = promisify(connection.query).bind(connection);
 // Create a new product
 router.post("/", async (req, res) => {
   try {
-    const { title, productPrice, imageUrl, stock, description, category_id } =
+    const { product_name, description, price, stock, image_url, cat_id } =
       req.body;
 
     const query = `
@@ -18,12 +18,12 @@ router.post("/", async (req, res) => {
     `;
 
     const values = [
-      title,
+      product_name,
       description,
-      productPrice,
+      price,
       stock,
-      imageUrl,
-      category_id,
+      image_url,
+      cat_id,
     ];
 
     const results = await queryAsync(query, values);
