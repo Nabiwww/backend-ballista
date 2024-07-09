@@ -311,10 +311,7 @@ app.get("/askAI", async (req, res) => {
       const salesDataText = formattedResults.join(", ");
 
       const promptText = `Ini adalah data penjualan saya: ${salesDataText}.
-Berapa total penjualan untuk setiap bulan?
-Bandingkan kinerja penjualan antara bulan.
-Berikan rekomendasi produk untuk dijual bulan depan. Format: Inilah rekomendasi saya untuk jumlah produk yang harus dijual: [jumlah].
-Rekomendasikan strategi pemasaran yang sesuai untuk menjual jersey dan merchandise.`;
+Berapa total penjualan untuk setiap bulan? Bandingkan kinerja penjualan antara bulan.Berikan rekomendasi produk untuk dijual bulan depan. Format: Inilah rekomendasi saya untuk jumlah produk yang harus dijual: [jumlah]. Rekomendasikan strategi pemasaran yang sesuai untuk menjual jersey dan merchandise.`;
 
       console.log("Prompt text:", promptText);
 
@@ -382,6 +379,159 @@ app.get("/product-seen", async (req, res) => {
   }
 });
 
+app.get("/sales-ai", async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        DATE_FORMAT(order_time, '%Y-%m') AS month,
+        SUM(orders.quantity * products.price * (products.product_seen + products.product_liked)) AS predicted_revenue
+      FROM 
+        orders
+      JOIN 
+        products ON orders.product_id = products.product_id
+      GROUP BY 
+        DATE_FORMAT(order_time, '%Y-%m')
+      ORDER BY
+        DATE_FORMAT(order_time, '%Y-%m');
+    `;
+
+    const monthNames = {
+      "01": "Januari",
+      "02": "Februari",
+      "03": "Maret",
+      "04": "April",
+      "05": "Mei",
+      "06": "Juni",
+      "07": "Juli",
+      "08": "Agustus",
+      "09": "September",
+      10: "Oktober",
+      11: "November",
+      12: "Desember",
+    };
+
+    connection.query(query, async (error, results) => {
+      if (error) {
+        console.error("Error executing query:", error);
+        return res.status(500).json({ error: "Failed to execute query" });
+      }
+
+      const formattedResults = results.map((row) => {
+        const [year, month] = row.month.split("-");
+        const monthName = monthNames[month];
+        return `bulan ${monthName} ${row.predicted_revenue}`;
+      });
+
+      const salesDataText = formattedResults.join(", ");
+
+      // Calculate the next six months
+      const lastMonth = results[results.length - 1].month;
+      const [lastYear, lastMonthNumber] = lastMonth.split("-");
+      let year = parseInt(lastYear);
+      let month = parseInt(lastMonthNumber);
+
+      const nextSixMonths = [];
+      for (let i = 0; i < 6; i++) {
+        month += 1;
+        if (month > 12) {
+          month = 1;
+          year += 1;
+        }
+        const monthStr = month.toString().padStart(2, "0");
+        const nextMonthName = monthNames[monthStr];
+        nextSixMonths.push(`${nextMonthName} ${year}`);
+      }
+
+      const promptText = `Ini adalah data penjualan saya: ${salesDataText}. Berikan prediksi nominal pendapatan untuk 6 bulan ke depan.`;
+
+      console.log("Prompt text:", promptText);
+
+      // Kirimkan prompt text ke AI
+      const aiResponse = await tanyabal(promptText);
+
+      console.log("AI Response:", aiResponse);
+
+      // Ekstraksi data prediksi dari AI response
+      const matchedPredictionData = aiResponse.match(/(\w+): IDR ([\d,]+)/g);
+
+      if (!matchedPredictionData) {
+        return res.status(500).json({
+          error: "Failed to extract prediction data from AI response",
+        });
+      }
+
+      // Manipulasi data prediksi untuk format yang sesuai
+      const predictions = matchedPredictionData.map((prediction, index) => {
+        const [month, value] = prediction.split(": IDR ");
+        const nextMonth = nextSixMonths[index];
+        return {
+          month: nextMonth,
+          predicted_revenue: parseInt(value.replace(/,/g, "")),
+        };
+      });
+
+      res.status(200).json(predictions);
+    });
+  } catch (error) {
+    console.error("Error in sales-ai endpoint:", error);
+    res.status(500).json({ error: "Error processing AI request" });
+  }
+});
+
+//Endpoint data penjualan per kota
+app.get('/sales-per-city', (req, res) => {
+  const query = `
+    SELECT
+    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(u.alamat, ',', -1), ' ', -1)) AS kota,
+    SUM(o.quantity) AS total_terjual
+    FROM
+    orders o
+    JOIN
+    users u ON o.user_id = u.user_id
+    GROUP BY
+    kota
+    ORDER BY
+    total_terjual DESC;
+    `;
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).send('Internal Server Error');
+      return;
+    }
+
+    console.log('Results:', results); // Logging data
+    res.json(results);
+  });
+});
+
+
+// Endpoint untuk mendapatkan data total penjualan per gender
+app.get('/sales-per-gender', (req, res) => {
+  const query = `
+    SELECT
+      u.gender,
+      SUM(o.quantity) AS total_terjual
+    FROM
+      orders o
+    JOIN
+      users u ON o.user_id = u.user_id
+    GROUP BY
+      u.gender;
+  `;
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      res.status(500).send('Internal Server Error');
+      return;
+    }
+
+    console.log('Results:', results); // Logging data
+    res.json(results);
+  });
+});
 
 
 const port = process.env.PORT || 3002;

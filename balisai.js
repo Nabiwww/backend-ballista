@@ -25,7 +25,7 @@ async function getGroqChatCompletion(tanya) {
           When analyzing data and generating reports, ensure that your findings are precise, relevant, and easily comprehensible.
           Here is what you should do and the format to follow: State the total sales for each month with the format 'Bulan: [total]'. 
           Compare the sales performance across different months. Provide recommendations on the products that should be sold next month.Suggest suitable marketing strategies for the sale of jerseys and merchandise. 
-          Predict next month Key Performance Indicator.'
+          Predict next month Key Performance Indicator. Predict next 6 month total earn.'
         `,
       },
       {
